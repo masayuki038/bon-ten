@@ -1,22 +1,15 @@
 package net.wrap_trap.bonten;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.zip.CRC32;
 
+import net.wrap_trap.bonten.deserializer.DeserializerFactory;
 import net.wrap_trap.bonten.entry.Entry;
 import net.wrap_trap.bonten.entry.InvalidCrcException;
-
-import org.apache.commons.io.FileUtils;
 
 public class Nursery {
 	
@@ -83,23 +76,23 @@ public class Nursery {
 	}
 	
 	private static Entry deserializeEntry(BontenInputStream bis) throws IOException, InvalidCrcException {
-		long size = bis.read4ByteToLong();
-		long crc = bis.read4ByteToLong();
+		long size = bis.readUnsignedInt();
+		long crc = bis.readUnsignedInt();
 		byte[] body = bis.read(size);
 		bis.readEndTag();
 		
-		if(!checkCRC(crc, body)) {
+		if(!Utils.checkCRC(crc, body)) {
 			throw new InvalidCrcException();
 		}
-		return Utils.createEntry(body);
+		
+		if(body.length < 1) {
+			throw new IllegalStateException("Empty body");
+		}
+		byte tag = body[0];
+		
+		return DeserializerFactory.getDeserializer(tag).deserialize(body);
 	}
 
-	private static boolean checkCRC(long crc, byte[] body) {
-		CRC32 crc32 = new CRC32();
-		crc32.update(body);
-		return (crc == crc32.getValue());
-	}
-	
 	public Nursery(String dirPath, int maxLevel, Map<byte[], Entry> tree) {
 		this.dirPath = dirPath;
 		this.maxLevel = maxLevel;

@@ -1,19 +1,20 @@
 package net.wrap_trap.bonten.entry;
 
+import java.math.BigInteger;
 import java.util.Date;
 
 public class PosLenEntry extends Entry {
 
-	private long pos;
+	private BigInteger pos;
 	private long len;
 	
-	public PosLenEntry(byte[] key, long pos, long len) {
+	public PosLenEntry(byte[] key, BigInteger pos, long len) {
 		super(key);
 		this.pos = pos;
 		this.len = len;
 	}
 
-	public long getPos() {
+	public BigInteger getPos() {
 		return pos;
 	}
 

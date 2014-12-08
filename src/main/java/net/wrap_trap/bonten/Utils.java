@@ -1,31 +1,19 @@
 package net.wrap_trap.bonten;
 
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Date;
+import java.util.Collections;
+import java.util.List;
+import java.util.zip.CRC32;
 
 import com.google.common.primitives.UnsignedBytes;
 
-import net.wrap_trap.bonten.entry.DeletedEntry;
 import net.wrap_trap.bonten.entry.Entry;
-import net.wrap_trap.bonten.entry.KeyValueEntry;
-import net.wrap_trap.bonten.entry.PosLenEntry;
+import net.wrap_trap.bonten.serializer.Serializer;
+import net.wrap_trap.bonten.serializer.SerializerFactory;
 
 public class Utils {
-	
-	private static final int SIZE_OF_ENTRY_TYPE = 1;
-	private static final int SIZE_OF_KEYSIZE = 4;
-	private static final int SIZE_OF_TIMESTAMP = 4;
-	private static final int SIZE_OF_POS = 8;
-	private static final int SIZE_OF_LEN = 4;
-	
-	private static final int TAG_KV_DATA = 128;
-	private static final int TAG_DELETED = 129;
-	private static final int TAG_POSLEN = 130;
-	private static final int TAG_TRANSACT = 131;
-	private static final int TAG_KV_DATA2 = 132;
-	private static final int TAG_DELETED2 = 133;
 
 	public static void ensureExpiry() {
 		BontenConfig config = Bonten.getConfig();
@@ -39,26 +27,6 @@ public class Utils {
 		return Math.log(e) / Math.log(2);
 	}
 	
-	public static Entry createEntry(byte[] body) throws IOException {
-		try(BontenInputStream bis = new BontenInputStream(new ByteArrayInputStream(body))) {
-			int type = bis.read();
-			switch(type) {
-				case TAG_KV_DATA:
-					return createKeyValueEntry(body, bis, false);
-				case TAG_DELETED:
-					return createDeletedEntry(body, bis, false);
-				case TAG_POSLEN:
-					return createPosLenEntry(body, bis);
-				case TAG_KV_DATA2:
-					return createKeyValueEntry(body, bis, true);
-				case TAG_DELETED2:
-					return createDeletedEntry(body, bis, true);
-				default:
-					throw new IllegalStateException("Unexpected Entry Type: " + type);
-			}
-		}
-	}
-	
 	public static int compareBytes(byte[] a, byte[] b) {
 		return UnsignedBytes.lexicographicalComparator().compare(a, b);
 	}
@@ -66,35 +34,41 @@ public class Utils {
 	public static byte[] toBytes(String str) {
 		return str.getBytes(Charset.forName("UTF-8"));
 	}
+	
+	public static boolean checkCRC(long crc, byte[] body) {
+		CRC32 crc32 = getCRC(body);
+		return (crc == crc32.getValue());
+	}
 
-	private static KeyValueEntry createKeyValueEntry(byte[] body, BontenInputStream bis, boolean readTimestamp)
-			throws IOException {
-		Date timestamp = null;
-		if(readTimestamp) {
-			timestamp  = new Date(bis.read4ByteToLong());
-		}
-		long size = bis.read4ByteToLong();
-		byte[] key = bis.read(size);
-		long readSize = SIZE_OF_ENTRY_TYPE + ((readTimestamp)? 0 : SIZE_OF_TIMESTAMP) + SIZE_OF_KEYSIZE + size;
-		byte[] value = bis.read(body.length - readSize);
-		return new KeyValueEntry(key, value, timestamp);
+	public static long getCRCValue(byte[] body) {
+		CRC32 crc32 = getCRC(body);
+		return crc32.getValue();
 	}
 	
-	private static DeletedEntry createDeletedEntry(byte[] body, BontenInputStream bis, boolean readTimestamp) throws IOException {
-		Date timestamp = null;
-		if(readTimestamp) {
-			timestamp  = new Date(bis.read4ByteToLong());
-		}
-		int readSize = SIZE_OF_ENTRY_TYPE + ((readTimestamp)? 0 : SIZE_OF_TIMESTAMP);
-		byte[] key = bis.read(body.length - readSize);
-		return new DeletedEntry(key, timestamp);
+	private static CRC32 getCRC(byte[] body) {
+		CRC32 crc32 = new CRC32();
+		crc32.update(body);
+		return crc32;
 	}
 	
-	private static PosLenEntry createPosLenEntry(byte[] body, BontenInputStream bis) throws IOException {
-		long pos = bis.read8ByteToLong();
-		long len = bis.read4ByteToLong();
-		int readSize = SIZE_OF_POS + SIZE_OF_LEN;
-		byte[] key = bis.read(body.length - readSize);
-		return new PosLenEntry(key, pos, len);
+	public static List<byte[]> encodeIndexNode(List<Entry> entryList, String compress) throws IOException {
+		List<byte[]> ret = Collections.emptyList();
+		for(Entry entry : entryList) {
+			ret.add(encodeIndexNode(entry, compress));
+		}
+		return ret;
+	}
+
+	private static byte[] encodeIndexNode(Entry entry, String compress) throws IOException {
+		Serializer serializer = SerializerFactory.getSerializer(entry);
+		byte[] body = serializer.serialize(entry);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try(BontenOutputStream bos = new BontenOutputStream(baos)) {
+			bos.writeInt(body.length);
+			bos.writeUnsignedInt(Utils.getCRCValue(body));
+			bos.write(body);
+			bos.writeEndTag();
+			return baos.toByteArray();
+		}
 	}
 }

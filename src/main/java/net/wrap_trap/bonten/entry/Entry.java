@@ -2,7 +2,11 @@ package net.wrap_trap.bonten.entry;
 
 import java.util.Date;
 
+import net.wrap_trap.bonten.Utils;
+
 abstract public class Entry {
+	
+	public static final byte[] TOMBSTONE = Utils.toBytes("deleted");
 	
 	private byte[] key;
 
@@ -30,5 +34,9 @@ abstract public class Entry {
 		byte[] value = getValue();
 		int valueSize = (value != null)? value.length : 0;
 		return key.length + 5 + 4 + valueSize;
+	}
+	
+	public boolean isTombstone() {
+		return getValue() == TOMBSTONE;
 	}
 }

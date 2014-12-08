@@ -24,8 +24,16 @@ public class Node {
 	public List<Entry> getEntryList() {
 		return entryList;
 	}
+	
+	public void addEntry(Entry entry) {
+		this.entryList.add(entry);
+	}
 
 	public int getSize() {
 		return size;
+	}
+	
+	public void setSize(int size) {
+		this.size = size;
 	}
 }

@@ -15,7 +15,9 @@ public class DeletedEntry extends Entry {
 	
 	public DeletedEntry(byte[] key, Date timestamp) {
 		super(key);
-		this.timestamp = timestamp;
+		if(timestamp != null) {
+			this.timestamp = new Date(timestamp.getTime() / 1000L * 1000L);
+		}
 	}
 
 	@Override
@@ -25,6 +27,6 @@ public class DeletedEntry extends Entry {
 
 	@Override
 	public byte[] getValue() {
-		return Utils.toBytes("deleted");
+		return TOMBSTONE;
 	}
 }

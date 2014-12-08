@@ -14,7 +14,9 @@ public class KeyValueEntry extends Entry {
 	public KeyValueEntry(byte[] key, byte[] value, Date timestamp) {
 		super(key);
 		this.value = value;
-		this.timestamp = timestamp;
+		if(timestamp != null) {
+			this.timestamp = new Date(timestamp.getTime() / 1000L * 1000L);
+		}
 	}
 
 	@Override

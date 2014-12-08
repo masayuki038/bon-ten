@@ -1,14 +1,9 @@
 package net.wrap_trap.bonten;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +80,24 @@ public class Writer {
 			}
 		}
 		int newSize = node.getSize() + entry.estimateNodeSizeIncrement();
+		bloom.add(entry.getKey());
+		if(level == 0) {
+			if(entry.isTombstone()) {
+				this.tombstoneCount++;
+			} else {
+				this.valueCount++;
+			}
+		}
+		node.addEntry(entry);
+		node.setSize(newSize);
 		
+		if(newSize >= this.blockSize) {
+			flushNodeBuffer();
+		}
+	}
+	
+	protected void flushNodeBuffer() {
+
 	}
 	
 }

@@ -3,6 +3,8 @@ package net.wrap_trap.bonten;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.primitives.UnsignedInteger;
+
 import static org.hamcrest.core.Is.is;
 
 public class UtilsTest {

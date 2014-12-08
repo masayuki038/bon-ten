@@ -1,5 +1,6 @@
 package net.wrap_trap.bonten.entry;
 
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Date;
@@ -11,6 +12,8 @@ import static org.hamcrest.core.Is.is;
 import static net.wrap_trap.bonten.Utils.toBytes;
 
 public class EntryTest {
+	
+	private static final BigInteger BIG_INT_1 = new BigInteger("1");
 	
 	@Test
 	public void testNotExpired() {
@@ -36,7 +39,7 @@ public class EntryTest {
 	
 	@Test
 	public void testPosLenEntryExpired() {
-		Entry entry = new PosLenEntry(toBytes("foo"), 1L, 1L);
+		Entry entry = new PosLenEntry(toBytes("foo"), BIG_INT_1, 1L);
 		Assert.assertThat(entry.expired(), is(false));
 	}
 	
@@ -60,7 +63,7 @@ public class EntryTest {
 	
 	@Test
 	public void testEstimateNodeSizeIncrementWithPosLenEntry() {
-		Entry entry = new PosLenEntry(toBytes("フー"), 1L, 1L);
+		Entry entry = new PosLenEntry(toBytes("フー"), BIG_INT_1, 1L);
 		Assert.assertThat(entry.estimateNodeSizeIncrement(), is(15));
 	}
 }
