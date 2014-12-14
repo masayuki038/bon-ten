@@ -30,9 +30,9 @@ public class KeyValueEntrySerializeTest {
 		Entry entry = deserializer.deserialize(bytes);
 		
 		Assert.assertThat((entry instanceof KeyValueEntry), is(true));
-		KeyValueEntry kvEntry2 = (KeyValueEntry)entry;
-		Assert.assertThat(kvEntry.getKey(), equalTo(kvEntry2.getKey()));
-		Assert.assertThat(kvEntry.getValue(), equalTo(kvEntry2.getValue()));		
+		KeyValueEntry deserializedKvEntry = (KeyValueEntry)entry;
+		Assert.assertThat(deserializedKvEntry.getKey(), equalTo(kvEntry.getKey()));
+		Assert.assertThat(deserializedKvEntry.getValue(), equalTo(kvEntry.getValue()));		
 	}
 	
 	@Test
@@ -45,56 +45,9 @@ public class KeyValueEntrySerializeTest {
 		Entry entry = deserializer.deserialize(bytes);
 		
 		Assert.assertThat((entry instanceof KeyValueEntry), is(true));
-		KeyValueEntry kvEntry2 = (KeyValueEntry)entry;
-		Assert.assertThat(kvEntry.getKey(), equalTo(kvEntry2.getKey()));
-		Assert.assertThat(kvEntry.getValue(), equalTo(kvEntry2.getValue()));		
-		Assert.assertThat(kvEntry.getTimestamp(), equalTo(kvEntry2.getTimestamp()));		
-	}
-	
-	@Test
-	public void testSerializeDeletedEntry() throws IOException {
-		DeletedEntry deletedEntry = new DeletedEntry("foo".getBytes());
-		Serializer serializer = SerializerFactory.getSerializer(deletedEntry);
-		byte[] bytes = serializer.serialize(deletedEntry);
-		
-		Deserializer deserializer = DeserializerFactory.getDeserializer(bytes[0]);
-		Entry entry = deserializer.deserialize(bytes);
-		
-		Assert.assertThat((entry instanceof DeletedEntry), is(true));
-		DeletedEntry deletedEntry2 = (DeletedEntry)entry;
-		Assert.assertThat(deletedEntry.getKey(), equalTo(deletedEntry2.getKey()));
-	}
-
-	@Test
-	public void testSerializeDeletedEntryWithTimestamp() throws IOException {
-		DeletedEntry deletedEntry = new DeletedEntry("foo".getBytes(), new Date());
-		Serializer serializer = SerializerFactory.getSerializer(deletedEntry);
-		byte[] bytes = serializer.serialize(deletedEntry);
-		
-		Deserializer deserializer = DeserializerFactory.getDeserializer(bytes[0]);
-		Entry entry = deserializer.deserialize(bytes);
-		
-		Assert.assertThat((entry instanceof DeletedEntry), is(true));
-		DeletedEntry deletedEntry2 = (DeletedEntry)entry;
-		Assert.assertThat(deletedEntry.getKey(), equalTo(deletedEntry2.getKey()));
-		Assert.assertThat(deletedEntry.getValue(), equalTo(deletedEntry2.getValue()));		
-		Assert.assertThat(deletedEntry.getTimestamp(), equalTo(deletedEntry2.getTimestamp()));		
-	}
-	
-	@Test
-	public void testSerializePosLenEntry() throws IOException {
-		BigInteger pos = BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1L));
-		PosLenEntry posLenEntry = new PosLenEntry("foo".getBytes(), pos, Integer.MAX_VALUE + 1L);
-		Serializer serializer = SerializerFactory.getSerializer(posLenEntry);
-		byte[] bytes = serializer.serialize(posLenEntry);
-		
-		Deserializer deserializer = DeserializerFactory.getDeserializer(bytes[0]);
-		Entry entry = deserializer.deserialize(bytes);
-		
-		Assert.assertThat((entry instanceof PosLenEntry), is(true));
-		PosLenEntry posLenEntry2 = (PosLenEntry)entry;
-		Assert.assertThat(posLenEntry.getKey(), equalTo(posLenEntry2.getKey()));
-		Assert.assertThat(posLenEntry.getPos(), equalTo(posLenEntry2.getPos()));
-		Assert.assertThat(posLenEntry.getLen(), equalTo(posLenEntry2.getLen()));
+		KeyValueEntry deserializedKvEntry = (KeyValueEntry)entry;
+		Assert.assertThat(deserializedKvEntry.getKey(), equalTo(kvEntry.getKey()));
+		Assert.assertThat(deserializedKvEntry.getValue(), equalTo(kvEntry.getValue()));		
+		Assert.assertThat(deserializedKvEntry.getTimestamp(), equalTo(kvEntry.getTimestamp()));		
 	}
 }
