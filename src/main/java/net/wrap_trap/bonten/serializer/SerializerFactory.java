@@ -6,6 +6,7 @@ import java.util.Map;
 import net.wrap_trap.bonten.entry.DeletedEntry;
 import net.wrap_trap.bonten.entry.Entry;
 import net.wrap_trap.bonten.entry.KeyValueEntry;
+import net.wrap_trap.bonten.entry.PosLenEntry;
 
 public class SerializerFactory {
 	
@@ -15,6 +16,7 @@ public class SerializerFactory {
 		map = new HashMap<>();
 		map.put(KeyValueEntry.class, new KeyValueEntrySerializer());
 		map.put(DeletedEntry.class, new DeletedEntrySerializer());
+		map.put(PosLenEntry.class, new PosLenEntrySerializer());
 	}
 	
 	public static Serializer getSerializer(Entry entry) {
