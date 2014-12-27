@@ -18,6 +18,11 @@ public class BontenOutputStream implements AutoCloseable {
 		this.internal.writeInt((int)l);
 	}
 	
+	public void writeUnsignedShort(int i) throws IOException {
+		// write last 2bytes
+		this.internal.writeShort(i);
+	}
+	
 	public void writeUnsignedLong(BigInteger b) throws IOException {
 		// write last 8bytes
 		this.internal.writeLong(b.longValue());

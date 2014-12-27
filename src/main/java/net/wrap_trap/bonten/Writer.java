@@ -1,14 +1,20 @@
 package net.wrap_trap.bonten;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+
 import net.wrap_trap.bonten.entry.Entry;
+import net.wrap_trap.bonten.entry.PosLenEntry;
 
 public class Writer {
 	
@@ -23,6 +29,8 @@ public class Writer {
 	private long indexFilePos;
 	private int valueCount;
 	private int tombstoneCount;
+	private long lastNodePos;
+	private long lastNodeSize;
 	private List<Node> nodeList;
 	
 	public Writer(String dataFilePath) {
@@ -55,21 +63,21 @@ public class Writer {
 		this.indexFilePos = fileFormat.length;
 	}
 	
-	public void add(Entry entry) {
+	public void add(Entry entry) throws IOException {
 		if(entry.expired()) {
 			return;
 		}
 		appendNode(0, entry);
 	}
 	
-	public void appendNode(int level, Entry entry) {
-		if(nodeList.isEmpty()) {
-			nodeList.add(new Node(level));
+	protected void appendNode(int level, Entry entry) throws IOException {
+		if(this.nodeList.isEmpty()) {
+			this.nodeList.add(new Node(level));
 		}
 		Node tmp = nodeList.get(0);
 		if(level < tmp.getLevel() ) {
-			nodeList.remove(0);
-			nodeList.add(0, new Node(tmp.getLevel() - 1));
+			this.nodeList.remove(0);
+			this.nodeList.add(0, new Node(tmp.getLevel() - 1));
 		}
 		Node node = nodeList.get(0);
 		List<Entry> entryList = node.getEntryList();
@@ -92,12 +100,30 @@ public class Writer {
 		node.setSize(newSize);
 		
 		if(newSize >= this.blockSize) {
-			flushNodeBuffer();
+			PosLenEntry posLenEntry = flushNodeBuffer(level);
+			this.appendNode(level + 1, posLenEntry);
 		}
 	}
 	
-	protected void flushNodeBuffer() {
-
+	protected PosLenEntry flushNodeBuffer(int level) throws IOException {
+		Node node = nodeList.get(0);
+		List<Entry> orderedMembers = Lists.reverse(node.getEntryList());
+		byte[] blockData = Utils.encodeIndexNode(orderedMembers, this.compress);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try(BontenOutputStream bos = new BontenOutputStream(baos)) {
+			bos.writeUnsignedInt(blockData.length + 2);
+			bos.writeUnsignedShort(level);
+			bos.write(blockData);
+			this.fileWriter.write(baos.toByteArray());
+		}
+		Entry entry = orderedMembers.get(0);
+		long dataSize = blockData.length + 6;
+		PosLenEntry posLenEntry = new PosLenEntry(entry.getKey(), BigInteger.valueOf(this.indexFilePos), dataSize);
+		this.nodeList = this.nodeList.subList(1, this.nodeList.size());
+		this.lastNodePos = this.indexFilePos;
+		this.lastNodeSize = dataSize;
+		this.indexFilePos += dataSize;
+		return posLenEntry;
 	}
 	
 }

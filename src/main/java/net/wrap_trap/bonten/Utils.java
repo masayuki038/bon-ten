@@ -51,12 +51,13 @@ public class Utils {
 		return crc32;
 	}
 	
-	public static List<byte[]> encodeIndexNode(List<Entry> entryList, String compress) throws IOException {
-		List<byte[]> ret = Collections.emptyList();
-		for(Entry entry : entryList) {
-			ret.add(encodeIndexNode(entry, compress));
+	public static byte[] encodeIndexNode(List<Entry> entryList, String compress) throws IOException {
+		try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+			for(Entry entry : entryList) {
+				baos.write(encodeIndexNode(entry, compress));
+			}
+			return baos.toByteArray();
 		}
-		return ret;
 	}
 
 	private static byte[] encodeIndexNode(Entry entry, String compress) throws IOException {
