@@ -13,23 +13,22 @@ import net.wrap_trap.bonten.entry.Entry;
 
 public class DeletedEntrySerializer implements Serializer {
 
-	@Override
-	public byte[] serialize(Entry entry) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try(BontenOutputStream bos = new BontenOutputStream(baos)) {
-			if(!(entry instanceof DeletedEntry)) {
-				throw new IllegalArgumentException("entry class expected DeletedEntry, but :" + entry.getClass().getName());
-			}
-			DeletedEntry deletedEntry = (DeletedEntry)entry;
-			Date timestamp = deletedEntry.getTimestamp();
-			if(timestamp != null) {
-				bos.writeByte((byte)TAG_DELETED2);
-				bos.writeUnsignedInt(timestamp.getTime() / 1000L);
-			} else {
-				bos.writeByte((byte)TAG_DELETED);
-			}
-			bos.write(deletedEntry.getKey());
-			return baos.toByteArray();
-		}
-	}
+  @Override
+  public byte[] serialize(final Entry entry) throws IOException {
+    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try (BontenOutputStream bos = new BontenOutputStream(baos)) {
+      if (!(entry instanceof DeletedEntry))
+        throw new IllegalArgumentException("entry class expected DeletedEntry, but :" + entry.getClass().getName());
+      final DeletedEntry deletedEntry = (DeletedEntry) entry;
+      final Date timestamp = deletedEntry.getTimestamp();
+      if (timestamp != null) {
+        bos.writeByte(TAG_DELETED2);
+        bos.writeUnsignedInt(timestamp.getTime() / 1000L);
+      } else {
+        bos.writeByte(TAG_DELETED);
+      }
+      bos.write(deletedEntry.getKey());
+      return baos.toByteArray();
+    }
+  }
 }

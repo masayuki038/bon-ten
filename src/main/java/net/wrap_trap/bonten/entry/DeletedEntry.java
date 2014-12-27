@@ -1,32 +1,29 @@
 package net.wrap_trap.bonten.entry;
 
-import java.nio.charset.Charset;
 import java.util.Date;
-
-import net.wrap_trap.bonten.Utils;
 
 public class DeletedEntry extends Entry {
 
-	private Date timestamp;
-	
-	public DeletedEntry(byte[] key) {
-		this(key, null);
-	}
-	
-	public DeletedEntry(byte[] key, Date timestamp) {
-		super(key);
-		if(timestamp != null) {
-			this.timestamp = new Date(timestamp.getTime() / 1000L * 1000L);
-		}
-	}
+  private Date timestamp;
 
-	@Override
-	public Date getTimestamp() {
-		return timestamp;
-	}
+  public DeletedEntry(final byte[] key) {
+    this(key, null);
+  }
 
-	@Override
-	public byte[] getValue() {
-		return TOMBSTONE;
-	}
+  public DeletedEntry(final byte[] key, final Date timestamp) {
+    super(key);
+    if (timestamp != null) {
+      this.timestamp = new Date(timestamp.getTime() / 1000L * 1000L);
+    }
+  }
+
+  @Override
+  public Date getTimestamp() {
+    return this.timestamp;
+  }
+
+  @Override
+  public byte[] getValue() {
+    return TOMBSTONE;
+  }
 }

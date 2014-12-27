@@ -5,30 +5,30 @@ import java.util.Date;
 
 public class PosLenEntry extends Entry {
 
-	private BigInteger pos;
-	private long len;
-	
-	public PosLenEntry(byte[] key, BigInteger pos, long len) {
-		super(key);
-		this.pos = pos;
-		this.len = len;
-	}
+  private BigInteger pos;
+  private long len;
 
-	public BigInteger getPos() {
-		return pos;
-	}
+  public PosLenEntry(final byte[] key, final BigInteger pos, final long len) {
+    super(key);
+    this.pos = pos;
+    this.len = len;
+  }
 
-	public long getLen() {
-		return len;
-	}
-	
-	@Override
-	public Date getTimestamp() {
-		return null;
-	}
+  public BigInteger getPos() {
+    return this.pos;
+  }
 
-	@Override
-	public byte[] getValue() {
-		return null;
-	}
+  public long getLen() {
+    return this.len;
+  }
+
+  @Override
+  public Date getTimestamp() {
+    return null;
+  }
+
+  @Override
+  public byte[] getValue() {
+    return null;
+  }
 }

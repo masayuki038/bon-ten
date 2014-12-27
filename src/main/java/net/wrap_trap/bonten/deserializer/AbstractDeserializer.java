@@ -2,14 +2,14 @@ package net.wrap_trap.bonten.deserializer;
 
 public abstract class AbstractDeserializer implements Deserializer {
 
-	private boolean readTimestamp;
+  private boolean readTimestamp;
 
-	public AbstractDeserializer(boolean readTimestamp) {
-		super();
-		this.readTimestamp = readTimestamp;
-	}
+  public AbstractDeserializer(final boolean readTimestamp) {
+    super();
+    this.readTimestamp = readTimestamp;
+  }
 
-	protected boolean isReadTimestamp() {
-		return readTimestamp;
-	}
+  protected boolean isReadTimestamp() {
+    return this.readTimestamp;
+  }
 }

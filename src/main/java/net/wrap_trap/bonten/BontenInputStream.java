@@ -10,51 +10,47 @@ import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
 
 public class BontenInputStream implements AutoCloseable {
-	
-	private DataInputStream internal;
-	
-	public BontenInputStream(InputStream is) {
-		this.internal = new DataInputStream(is);
-	}
-	
-	public int read() throws IOException {
-		return internal.read();
-	}
-		
-	public long readUnsignedInt() throws IOException {
-		return UnsignedInteger.fromIntBits(internal.readInt()).longValue();
-	}
-	
-	public BigInteger readUnsignedLong() throws IOException {
-		return UnsignedLong.fromLongBits(internal.readLong()).bigIntegerValue();
-	}
-	
-	public byte[] read(long size) throws IOException {
-		if(size > Integer.MAX_VALUE) {
-			throw new IllegalStateException("size > Integer.MAX_VALUE");
-		}
-		byte[] buf = new byte[(int)size];
-		int read = internal.read(buf);
-		if(read < size) {
-			throw new EOFException(String.format("read: %d, size: %d", read, size));
-		}
-		return buf;
-	}
-	
-	public void readEndTag() throws IOException {
-		int ch1 = internal.read();
-		if(ch1 < 0) {
-			throw new EOFException();
-		}
-		if(ch1 != 0xff) {
-			throw new IllegalStateException("endTag != 0xff");
-		}
-	}
-	
-	@Override
-	public void close() throws IOException {
-		try {
-			internal.close();
-		} catch(IOException ignore) {}
-	}
+
+  private DataInputStream internal;
+
+  public BontenInputStream(final InputStream is) {
+    this.internal = new DataInputStream(is);
+  }
+
+  public int read() throws IOException {
+    return this.internal.read();
+  }
+
+  public long readUnsignedInt() throws IOException {
+    return UnsignedInteger.fromIntBits(this.internal.readInt()).longValue();
+  }
+
+  public BigInteger readUnsignedLong() throws IOException {
+    return UnsignedLong.fromLongBits(this.internal.readLong()).bigIntegerValue();
+  }
+
+  public byte[] read(final long size) throws IOException {
+    if (size > Integer.MAX_VALUE)
+      throw new IllegalStateException("size > Integer.MAX_VALUE");
+    final byte[] buf = new byte[(int) size];
+    final int read = this.internal.read(buf);
+    if (read < size)
+      throw new EOFException(String.format("read: %d, size: %d", read, size));
+    return buf;
+  }
+
+  public void readEndTag() throws IOException {
+    final int ch1 = this.internal.read();
+    if (ch1 < 0)
+      throw new EOFException();
+    if (ch1 != 0xff)
+      throw new IllegalStateException("endTag != 0xff");
+  }
+
+  @Override
+  public void close() throws IOException {
+    try {
+      this.internal.close();
+    } catch (final IOException ignore) {}
+  }
 }
