@@ -4,10 +4,8 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 
 import com.google.common.primitives.UnsignedInteger;
-import com.google.common.primitives.UnsignedLong;
 
 public class BontenInputStream implements AutoCloseable {
 
@@ -20,13 +18,21 @@ public class BontenInputStream implements AutoCloseable {
   public int read() throws IOException {
     return this.internal.read();
   }
+  
+  public int read(byte[] bytes) {
+    return this.read(bytes);
+  }
 
-  public long readUnsignedInt() throws IOException {
+  public int readInt() throws IOException {
+    return this.internal.readInt();
+  }
+  
+  public long readTimestamp() throws IOException {
     return UnsignedInteger.fromIntBits(this.internal.readInt()).longValue();
   }
 
-  public BigInteger readUnsignedLong() throws IOException {
-    return UnsignedLong.fromLongBits(this.internal.readLong()).bigIntegerValue();
+  public long readLong() throws IOException {
+    return this.internal.readLong();
   }
 
   public byte[] read(final long size) throws IOException {

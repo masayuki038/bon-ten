@@ -23,7 +23,7 @@ public class DeletedEntrySerializer implements Serializer {
       final Date timestamp = deletedEntry.getTimestamp();
       if (timestamp != null) {
         bos.writeByte(TAG_DELETED2);
-        bos.writeUnsignedInt(timestamp.getTime() / 1000L);
+        bos.writeTimestamp(timestamp.getTime() / 1000L);
       } else {
         bos.writeByte(TAG_DELETED);
       }

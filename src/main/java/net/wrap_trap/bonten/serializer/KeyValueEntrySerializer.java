@@ -23,11 +23,11 @@ public class KeyValueEntrySerializer implements Serializer {
       final Date timestamp = kvEntry.getTimestamp();
       if (timestamp != null) {
         bos.writeByte(TAG_KV_DATA2);
-        bos.writeUnsignedInt(timestamp.getTime() / 1000L);
+        bos.writeTimestamp(timestamp.getTime() / 1000L);
       } else {
         bos.writeByte(TAG_KV_DATA);
       }
-      bos.writeUnsignedInt(kvEntry.getKey().length);
+      bos.writeInt(kvEntry.getKey().length);
       bos.write(kvEntry.getKey());
       bos.write(kvEntry.getValue());
       return baos.toByteArray();

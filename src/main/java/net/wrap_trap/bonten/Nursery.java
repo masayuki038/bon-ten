@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.io.FileUtils;
+
 import net.wrap_trap.bonten.deserializer.DeserializerFactory;
 import net.wrap_trap.bonten.entry.Entry;
 import net.wrap_trap.bonten.entry.InvalidCrcException;
@@ -76,8 +78,8 @@ public class Nursery {
   }
 
   private static Entry deserializeEntry(final BontenInputStream bis) throws IOException, InvalidCrcException {
-    final long size = bis.readUnsignedInt();
-    final long crc = bis.readUnsignedInt();
+    final int size = bis.readInt();
+    final long crc = bis.readLong();
     final byte[] body = bis.read(size);
     bis.readEndTag();
 
@@ -86,9 +88,13 @@ public class Nursery {
 
     if (body.length < 1)
       throw new IllegalStateException("Empty body");
-    final byte tag = body[0];
-
-    return DeserializerFactory.getDeserializer(tag).deserialize(body);
+    
+    return DeserializerFactory.getDeserializer(body[0]).deserialize(body);
+  }
+  
+  public static void deleteNurseryDataFile(String dirPath) {
+    String nurseryDataFilePath = getNurseryDataFilePath(dirPath);
+    FileUtils.deleteQuietly(new File(nurseryDataFilePath));
   }
 
   public Nursery(final String dirPath, final int maxLevel, final Map<byte[], Entry> tree) {

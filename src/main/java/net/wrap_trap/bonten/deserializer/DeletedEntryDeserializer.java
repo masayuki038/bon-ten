@@ -24,7 +24,7 @@ public class DeletedEntryDeserializer extends AbstractDeserializer {
     try (BontenInputStream bis = new BontenInputStream(new ByteArrayInputStream(target))) {
       Date timestamp = null;
       if (isReadTimestamp()) {
-        timestamp = new Date(bis.readUnsignedInt() * 1000L);
+        timestamp = new Date(bis.readTimestamp() * 1000L);
       }
       final int readSize = SIZE_OF_ENTRY_TYPE + ((isReadTimestamp()) ? SIZE_OF_TIMESTAMP : 0);
       final byte[] key = bis.read(body.length - readSize);

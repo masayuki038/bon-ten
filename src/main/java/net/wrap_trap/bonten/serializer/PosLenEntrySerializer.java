@@ -19,8 +19,8 @@ public class PosLenEntrySerializer implements Serializer {
         throw new IllegalArgumentException("entry class expected PosLenEntry, but :" + entry.getClass().getName());
       final PosLenEntry posLenEntry = (PosLenEntry) entry;
       bos.writeByte(TAG_POSLEN);
-      bos.writeUnsignedLong(posLenEntry.getPos());
-      bos.writeUnsignedInt(posLenEntry.getLen());
+      bos.writeLong(posLenEntry.getPos());
+      bos.writeInt(posLenEntry.getLen());
       bos.write(posLenEntry.getKey());
       return baos.toByteArray();
     }

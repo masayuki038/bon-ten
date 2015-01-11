@@ -4,7 +4,6 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 import java.io.IOException;
-import java.math.BigInteger;
 
 import net.wrap_trap.bonten.deserializer.Deserializer;
 import net.wrap_trap.bonten.deserializer.DeserializerFactory;
@@ -18,8 +17,8 @@ public class PosLenEntrySerializeTest {
 
   @Test
   public void testSerializePosLenEntry() throws IOException {
-    final BigInteger pos = BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1L));
-    final PosLenEntry posLenEntry = new PosLenEntry("foo".getBytes(), pos, Integer.MAX_VALUE + 1L);
+    final long pos = Long.MAX_VALUE;
+    final PosLenEntry posLenEntry = new PosLenEntry("foo".getBytes(), pos, Integer.MAX_VALUE);
     final Serializer serializer = SerializerFactory.getSerializer(posLenEntry);
     final byte[] bytes = serializer.serialize(posLenEntry);
 

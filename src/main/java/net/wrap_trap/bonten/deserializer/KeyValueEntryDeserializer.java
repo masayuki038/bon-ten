@@ -25,11 +25,11 @@ public class KeyValueEntryDeserializer extends AbstractDeserializer {
     try (BontenInputStream bis = new BontenInputStream(new ByteArrayInputStream(target))) {
       Date timestamp = null;
       if (isReadTimestamp()) {
-        timestamp = new Date(bis.readUnsignedInt() * 1000L);
+        timestamp = new Date(bis.readTimestamp() * 1000L);
       }
-      final long keyLen = bis.readUnsignedInt();
+      final int keyLen = bis.readInt();
       final byte[] key = bis.read(keyLen);
-      final long readSize = SIZE_OF_ENTRY_TYPE + ((isReadTimestamp()) ? SIZE_OF_TIMESTAMP : 0) + SIZE_OF_KEYSIZE +
+      final int readSize = SIZE_OF_ENTRY_TYPE + ((isReadTimestamp()) ? SIZE_OF_TIMESTAMP : 0) + SIZE_OF_KEYSIZE +
                             keyLen;
       final byte[] value = bis.read(body.length - readSize);
       return new KeyValueEntry(key, value, timestamp);

@@ -17,6 +17,12 @@ public class Node {
     this.size = 0;
   }
 
+  public Node(final int level, final List<Entry> entryList) {
+    this.level = level;
+    this.entryList = entryList;
+    this.size = 0;
+  }
+
   public int getLevel() {
     return this.level;
   }

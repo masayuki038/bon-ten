@@ -1,5 +1,6 @@
 package net.wrap_trap.bonten;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -10,13 +11,19 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-public class Bloom {
+public class Bloom implements Serializable {
+  
+  /**
+   * serialVersionUID
+   */
+  private static final long serialVersionUID = -1168511260227825870L;
+
   private static final Logger logger = LoggerFactory.getLogger(Bloom.class);
 
-  private double e;
-  private int n;
-  private int mb;
-  private List<BitSet> a;
+  public double e;
+  public int n;
+  public int mb;
+  public List<BitSet> a;
 
   public Bloom(final int size) {
     this(size, 0.001);
