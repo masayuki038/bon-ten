@@ -66,6 +66,5 @@ public class BontenTest {
   @Test
   public void test() {
     IntStream.range(1, 10).skip(2).forEach((e) -> System.out.println(e));
-  }
-  
+  } 
 }

@@ -2,6 +2,7 @@ package net.wrap_trap.bonten.serializer;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.util.Date;
@@ -25,10 +26,10 @@ public class KeyValueEntrySerializeTest {
     final Deserializer deserializer = DeserializerFactory.getDeserializer(bytes[0]);
     final Entry entry = deserializer.deserialize(bytes);
 
-    Assert.assertThat((entry instanceof KeyValueEntry), is(true));
+    assertThat((entry instanceof KeyValueEntry), is(true));
     final KeyValueEntry deserializedKvEntry = (KeyValueEntry) entry;
-    Assert.assertThat(deserializedKvEntry.getKey(), equalTo(kvEntry.getKey()));
-    Assert.assertThat(deserializedKvEntry.getValue(), equalTo(kvEntry.getValue()));
+    assertThat(deserializedKvEntry.getKey(), equalTo(kvEntry.getKey()));
+    assertThat(deserializedKvEntry.getValue(), equalTo(kvEntry.getValue()));
   }
 
   @Test
@@ -40,10 +41,10 @@ public class KeyValueEntrySerializeTest {
     final Deserializer deserializer = DeserializerFactory.getDeserializer(bytes[0]);
     final Entry entry = deserializer.deserialize(bytes);
 
-    Assert.assertThat((entry instanceof KeyValueEntry), is(true));
+    assertThat((entry instanceof KeyValueEntry), is(true));
     final KeyValueEntry deserializedKvEntry = (KeyValueEntry) entry;
-    Assert.assertThat(deserializedKvEntry.getKey(), equalTo(kvEntry.getKey()));
-    Assert.assertThat(deserializedKvEntry.getValue(), equalTo(kvEntry.getValue()));
-    Assert.assertThat(deserializedKvEntry.getTimestamp(), equalTo(kvEntry.getTimestamp()));
+    assertThat(deserializedKvEntry.getKey(), equalTo(kvEntry.getKey()));
+    assertThat(deserializedKvEntry.getValue(), equalTo(kvEntry.getValue()));
+    assertThat(deserializedKvEntry.getTimestamp(), equalTo(kvEntry.getTimestamp()));
   }
 }

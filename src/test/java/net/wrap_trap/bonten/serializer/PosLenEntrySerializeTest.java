@@ -2,6 +2,7 @@ package net.wrap_trap.bonten.serializer;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 
@@ -25,10 +26,10 @@ public class PosLenEntrySerializeTest {
     final Deserializer deserializer = DeserializerFactory.getDeserializer(bytes[0]);
     final Entry entry = deserializer.deserialize(bytes);
 
-    Assert.assertThat((entry instanceof PosLenEntry), is(true));
+    assertThat((entry instanceof PosLenEntry), is(true));
     final PosLenEntry deserializedPosLenEntry = (PosLenEntry) entry;
-    Assert.assertThat(deserializedPosLenEntry.getKey(), equalTo(posLenEntry.getKey()));
-    Assert.assertThat(deserializedPosLenEntry.getPos(), equalTo(posLenEntry.getPos()));
-    Assert.assertThat(deserializedPosLenEntry.getLen(), equalTo(posLenEntry.getLen()));
+    assertThat(deserializedPosLenEntry.getKey(), equalTo(posLenEntry.getKey()));
+    assertThat(deserializedPosLenEntry.getPos(), equalTo(posLenEntry.getPos()));
+    assertThat(deserializedPosLenEntry.getLen(), equalTo(posLenEntry.getLen()));
   }
 }

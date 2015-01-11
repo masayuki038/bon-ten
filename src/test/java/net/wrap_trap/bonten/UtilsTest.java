@@ -27,8 +27,4 @@ public class UtilsTest {
     final byte[] b = { 9, 10 };
     Assert.assertThat((Utils.compareBytes(a, b) > 0), is(true));
   }
-
-  @Test
-  public void test() {}
-
 }

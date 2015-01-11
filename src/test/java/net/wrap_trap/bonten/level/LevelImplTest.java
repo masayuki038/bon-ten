@@ -17,5 +17,4 @@ public class LevelImplTest {
     LevelImpl levelImpl = new LevelImpl("/foo/bar", 1, null);
     Assert.assertThat("/foo/bar/A-1.data", is(levelImpl.getFile("A").getAbsolutePath()));
   }
-  
 }
