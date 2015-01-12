@@ -23,12 +23,8 @@ public class Nursery {
   private int maxLevel;
   private Map<byte[], Entry> tree;
 
-  public static int getBtreeSize(final int level) {
-    return level << 1;
-  }
-
   public static int getIncrementalMergeStep() {
-    return getBtreeSize(Bonten.TOP_LEVEL);
+    return Utils.getBtreeSize(Bonten.TOP_LEVEL);
   }
 
   public static Nursery newNursery(final String dirPath, final int maxLevel) throws IOException {

@@ -27,6 +27,7 @@ public class Bonten {
   public static final byte TAG_DELETED2 = (byte) 0x85;
   
   public static final String FILE_FORMAT = "HAN2";
+  public static final long FIRST_BLOCK_POS = Utils.toBytes(FILE_FORMAT).length;
 
   private static Pattern dataFilePattern = Pattern.compile("^[^\\d]+-(\\d+).data$");
 

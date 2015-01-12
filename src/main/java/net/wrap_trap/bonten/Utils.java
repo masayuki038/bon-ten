@@ -138,4 +138,8 @@ public class Utils {
       throw new RuntimeException(e);
     }
   }
+
+  public static int getBtreeSize(final int level) {
+    return level << 1;
+  }
 }

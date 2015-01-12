@@ -10,8 +10,6 @@ import akka.japi.Creator;
 
 public interface Level {
   
-  
-
   int unmergedCount();
 
   @SuppressWarnings("serial")
