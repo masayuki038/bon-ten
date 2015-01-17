@@ -11,12 +11,8 @@ import net.wrap_trap.bonten.Reader;
 import net.wrap_trap.bonten.Utils;
 import net.wrap_trap.bonten.merger.Merger;
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.actor.TypedActor;
-import akka.actor.TypedProps;
 import akka.actor.UntypedActor;
-import akka.japi.Creator;
 
 public class Level extends UntypedActor {
   

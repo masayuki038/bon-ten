@@ -6,7 +6,6 @@ import static org.junit.Assert.assertThat;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.wrap_trap.bonten.entry.Entry;
 import net.wrap_trap.bonten.entry.KeyValueEntry;

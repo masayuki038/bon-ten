@@ -11,9 +11,7 @@ import net.wrap_trap.bonten.Reader;
 import net.wrap_trap.bonten.Writer;
 import net.wrap_trap.bonten.entry.Entry;
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.dispatch.Futures;
 
 public class Merger extends UntypedActor {
   

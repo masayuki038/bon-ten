@@ -11,7 +11,6 @@ import net.wrap_trap.bonten.deserializer.DeserializerFactory;
 import net.wrap_trap.bonten.entry.Entry;
 import net.wrap_trap.bonten.entry.PosLenEntry;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class PosLenEntrySerializeTest {
