@@ -24,10 +24,10 @@ public class Writer {
   private int blockSize;
   private Map<String, Object> options;
   private Compress compress;
-  private long indexFilePos;
+  private long indexFilePos = -1;
   private int valueCount;
   private int tombstoneCount;
-  private long lastNodePos;
+  private long lastNodePos = -1;
   private long lastNodeSize;
   private List<Node> nodeList;
 
@@ -96,23 +96,72 @@ public class Writer {
     node.setSize(newSize);
 
     if (newSize >= this.blockSize) {
-      final PosLenEntry posLenEntry = flushNodeBuffer(level);
+      final PosLenEntry posLenEntry = flushNodeBuffer();
       this.appendNode(level + 1, posLenEntry);
     }
   }
+  
+  public void close() throws IOException {
+    archiveNodes();
+  }
+  
+  protected void archiveNodes() throws IOException {
+    if(!nodeList.isEmpty()) {
+      flushNodeBuffer();
+    }
+    if(nodeList.size() == 1) {
+      List<Entry> firstNodeEntryList = nodeList.get(0).getEntryList();
+      if((firstNodeEntryList.size() == 1) && (firstNodeEntryList.get(0) instanceof PosLenEntry)) {
+        this.nodeList = Lists.newArrayList();
+      }
+    }
+    writeTrailer();
+  }
+  
+  protected void writeTrailer() throws IOException {
+    long rootPos = this.lastNodePos;
+    if(rootPos == -1) {
+      // store contains no entries
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try(BontenOutputStream bos = new BontenOutputStream(baos)) {
+        bos.writeInt(0);
+        bos.writeShort((short)0);
+        this.fileWriter.write(baos.toByteArray());
+      }
+      rootPos = Bonten.FIRST_BLOCK_POS;
+    }
+    
+    byte[] serializedBloom = serializeBloom(this.bloom);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try(BontenOutputStream bos = new BontenOutputStream(baos)) {
+      bos.writeInt(0);
+      bos.write(serializedBloom);
+      bos.writeInt(serializedBloom.length);
+      bos.writeLong(rootPos);
+      this.fileWriter.write(baos.toByteArray());
+      this.fileWriter.flush();
+      this.fileWriter.close();
+      this.fileWriter = null;
+      this.indexFilePos = -1;
+    }
+  }
 
-  protected PosLenEntry flushNodeBuffer(final int level) throws IOException {
+  protected PosLenEntry flushNodeBuffer() throws IOException {
     final Node node = this.nodeList.get(0);
-    final List<Entry> orderedMembers = Lists.reverse(node.getEntryList());
+    final List<Entry> orderedMembers = node.getEntryList();
     final byte[] blockData = Utils.encodeIndexNodes(orderedMembers, this.compress);
     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (BontenOutputStream bos = new BontenOutputStream(baos)) {
       bos.writeInt(blockData.length + 2);
-      bos.writeShort((short)level);
+      bos.writeShort((short)node.getLevel());
       bos.write(blockData);
       this.fileWriter.write(baos.toByteArray());
     }
-    final Entry entry = orderedMembers.get(0);
+    this.fileWriter.flush();
+    return createPosLenEntry(orderedMembers.get(0), blockData);
+  }
+
+  protected PosLenEntry createPosLenEntry(final Entry entry, final byte[] blockData) {
     final int dataSize = blockData.length + 6;
     final PosLenEntry posLenEntry = new PosLenEntry(entry.getKey(), this.indexFilePos, dataSize);
     this.nodeList = this.nodeList.subList(1, this.nodeList.size());
@@ -122,7 +171,7 @@ public class Writer {
     return posLenEntry;
   }
   
-  protected byte[] serializeBloom(Bloom bloom) throws IOException {
+  protected static byte[] serializeBloom(Bloom bloom) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try(ObjectOutputStream oos = new ObjectOutputStream(baos)) {
       oos.writeObject(bloom);

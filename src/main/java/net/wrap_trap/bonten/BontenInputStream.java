@@ -19,8 +19,8 @@ public class BontenInputStream implements AutoCloseable {
     return this.internal.read();
   }
   
-  public int read(byte[] bytes) {
-    return this.read(bytes);
+  public int read(byte[] bytes) throws IOException {
+    return this.internal.read(bytes);
   }
 
   public int readInt() throws IOException {
