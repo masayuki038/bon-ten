@@ -35,7 +35,7 @@ public class ReaderTest {
     assertThat(bloom.member("test".getBytes()), is(true));
     assertThat(bloom.member("test1".getBytes()), is(false));
     
-    Bloom bloom2 = reader.deserializeBloom(writer.serializeBloom(bloom));
+    Bloom bloom2 = reader.deserializeBloom(Writer.serializeBloom(bloom));
     assertThat(bloom2.n, is(bloom.n));
     assertThat(bloom2.mb, is(bloom.mb));
     assertThat(bloom2.e, is(bloom.e));
