@@ -7,7 +7,6 @@ import net.wrap_trap.bonten.Bonten;
 import org.junit.Assert;
 import org.junit.Test;
 
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.testkit.TestActorRef;
 import static org.hamcrest.core.Is.is;

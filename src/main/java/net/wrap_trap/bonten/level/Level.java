@@ -27,7 +27,7 @@ public class Level extends UntypedActor {
   private Reader aReader;
   private Reader bReader;
   private Reader cReader;
-  private Merger merger;
+  private ActorRef merger;
   
   public Level(String dirPath, int level, ActorRef next) throws IOException {
     this.dirPath = dirPath;
@@ -93,14 +93,17 @@ public class Level extends UntypedActor {
     }
   }
 
-  protected Merger beginMerge() {
+  protected ActorRef beginMerge() {
     File aFile = getFile("A");
     File bFile = getFile("B");
     File xFile = getFile("X");
     FileUtils.deleteQuietly(xFile);
     int bTreeSize = Utils.getBtreeSize(this.level + 1);
-    return Merger.createMerger();
-    //return Merger.start(aFile, bFile, xFile, bTreeSize, (next != null));
+    return createMerger(getSelf(), aFile, bFile, xFile, bTreeSize, (next != null));
+  }
+  
+  public ActorRef createMerger(ActorRef from, File aFile, File bFile, File xFile, int bTreeSize, boolean isLastLevel) {
+    return getContext().actorOf(Props.create(Merger.class, from, aFile, bFile, xFile, bTreeSize, isLastLevel));
   }
 
   protected File getFile(String prefix) {
