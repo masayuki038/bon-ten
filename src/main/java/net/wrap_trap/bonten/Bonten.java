@@ -3,13 +3,22 @@ package net.wrap_trap.bonten;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.pattern.Patterns;
 import net.wrap_trap.bonten.level.Level;
 
-public class Bonten {
+public class Bonten extends UntypedActor {
 
   public static final int TOP_LEVEL = 8;
 
@@ -29,9 +38,11 @@ public class Bonten {
   public static final String FILE_FORMAT = "HAN2";
   public static final long FIRST_BLOCK_POS = Utils.toBytes(FILE_FORMAT).length;
 
-  private static Pattern dataFilePattern = Pattern.compile("^[^\\d]+-(\\d+).data$");
+  private static final Pattern dataFilePattern = Pattern.compile("^[^\\d]+-(\\d+).data$");
 
   private static BontenConfig bontenConfig;
+
+  public static ActorSystem actorSystem;
   
   private String dirPath;
 
@@ -41,9 +52,11 @@ public class Bonten {
     bonten.open();
     return bonten;
   }
+  
   public static void init() {
     bontenConfig = BontenConfig.loadConfig();
     Utils.ensureExpiry();
+    actorSystem = ActorSystem.create("system");
   }
 
   public static BontenConfig getConfig() {
@@ -57,12 +70,12 @@ public class Bonten {
   void open() throws IOException {
     File dir = new File(dirPath);
     if(dir.isDirectory()) {
-      Levels level = openLevel(dirPath);
+      Levels level = openLevels(dirPath);
       Nursery nersery = Nursery.recover(this.dirPath, level.getTop(), level.getMax());
     }
   }
   
-  private Levels openLevel(String dirPath) {
+  private Levels openLevels(String dirPath) {
     Nursery.deleteNurseryDataFile(dirPath);
 
     File dir = new File(dirPath);
@@ -70,14 +83,26 @@ public class Bonten {
     IntStream.range(levels.e2, levels.e1)
       .map(i -> levels.e1 - i + levels.e2)
       .boxed()
-      .reduce(new Tuple<Level, Integer>(null, 0), 
-              ((t, v) -> {
-                Level level = Level.open(dirPath, v, t.e1);
-                int mergeWork = t.e2 + level.unmergedCount();
-                return new Tuple<>(level, mergeWork);
-              }), (a, b) -> a);
+      .reduce(new Tuple<ActorRef, Integer>(null, 0), 
+              ((t, v) -> openLevel(dirPath, v, t)), (a, b) -> a);
 
     return null;
+  }
+  
+  protected ActorRef createLevel(String dirPath, int level, ActorRef next) {
+    return getContext().actorOf(Props.create(Level.class, dirPath, level, next));
+  }
+  
+  private Tuple<ActorRef, Integer> openLevel(String dirPath, Integer v, Tuple<ActorRef, Integer> t) {
+    try {
+      ActorRef level = createLevel(dirPath, v, t.e1);
+      level.tell("open", this.getSelf());
+      Future<Object> future = Patterns.ask(level, "unmergedCount", -1L);
+      Integer unmergedCount = (Integer)Await.result(future, Duration.create(5000, TimeUnit.MILLISECONDS));
+      return new Tuple<>(level, t.e2 + unmergedCount);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
   }
   
   protected Tuple<Integer, Integer> getLevels(final String[] dataFiles) {
@@ -92,7 +117,7 @@ public class Bonten {
         (a, b) -> a
       );
   }
-
+  
   class Levels {
     private int top;
     private int max;
@@ -116,5 +141,9 @@ public class Bonten {
     protected int getMin() {
       return min;
     }
+  }
+
+  @Override
+  public void onReceive(Object e) throws Exception {
   }
 }
