@@ -10,6 +10,9 @@ import net.wrap_trap.bonten.Read;
 import net.wrap_trap.bonten.Reader;
 import net.wrap_trap.bonten.Writer;
 import net.wrap_trap.bonten.entry.Entry;
+import net.wrap_trap.bonten.message.Message;
+import net.wrap_trap.bonten.message.Step;
+import net.wrap_trap.bonten.message.StepDone;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 
@@ -32,7 +35,7 @@ public class Merger extends UntypedActor {
     from.tell(outCount, from);
   }
 
-  protected int merge() throws IOException {
+  protected void merge() throws IOException {
     Reader aReader = new Reader(this.aFile.getAbsolutePath());
     aReader.open(Read.SEQUENTIAL);
 
@@ -47,19 +50,25 @@ public class Merger extends UntypedActor {
     List<Entry> aEntryList = aReader.getFirstNode();
     List<Entry> bEntryList = bReader.getFirstNode();
     
-    return scan(aEntryList, bEntryList, 0, null);
+    scan(aEntryList, bEntryList, 0, null);
   }
   
-  protected int scan(List<Entry> aEntryList, List<Entry> bEntryList, int n, Object pid) {
+  protected void scan(List<Entry> aEntryList, List<Entry> bEntryList, int n, ActorRef fromPid, ) {
     if((n < 1) && (aEntryList.size() > 0) && (bEntryList.size() > 0)) {
-      // TODO step done
+      if(fromPid != null) {
+        fromPid.tell(new StepDone(), refs); // refs->mergerのPIDをmonitorしている
+      } 
     }
-    return 0;
   }
   
   @Override
-  public void onReceive(Object arg0) throws Exception {
-    // TODO Auto-generated method stub
-    
+  public void onReceive(Object object) throws Exception {
+    if(!(object instanceof Message)) {
+      throw new IllegalArgumentException("Expected Message, but not");
+    }
+
+    if(object instanceof Step) {
+      scan()
+    }
   }
 }

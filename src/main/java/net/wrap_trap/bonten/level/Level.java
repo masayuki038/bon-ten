@@ -3,6 +3,7 @@ package net.wrap_trap.bonten.level;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 
@@ -10,6 +11,8 @@ import net.wrap_trap.bonten.Read;
 import net.wrap_trap.bonten.Reader;
 import net.wrap_trap.bonten.Utils;
 import net.wrap_trap.bonten.merger.Merger;
+import net.wrap_trap.bonten.message.Lookup;
+import net.wrap_trap.bonten.message.Step;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -83,9 +86,10 @@ public class Level extends UntypedActor {
     if((this.aReader != null) && (this.bReader != null) && (this.merger == null)) {
       this.merger = beginMerge();
       // monitor
+      ActorRef mergeRef = this.getContext().watch(this.merger);
       int bTreeSize = Utils.getBtreeSize(this.level);
       int wip = (this.cReader == null)? bTreeSize : 2 * bTreeSize;
-      
+      this.merger.tell(new Step(mergeRef, wip), this.getSelf());
     }
   }
 
@@ -97,7 +101,7 @@ public class Level extends UntypedActor {
     int bTreeSize = Utils.getBtreeSize(this.level + 1);
     return createMerger(getSelf(), aFile, bFile, xFile, bTreeSize, (next != null));
   }
-  
+    
   public ActorRef createMerger(ActorRef from, File aFile, File bFile, File xFile, int bTreeSize, boolean isLastLevel) {
     return getContext().actorOf(Props.create(Merger.class, from, aFile, bFile, xFile, bTreeSize, isLastLevel));
   }
@@ -112,8 +116,15 @@ public class Level extends UntypedActor {
   }
 
   @Override
-  public void onReceive(Object arg0) throws Exception {
-    // TODO Auto-generated method stub
+  public void onReceive(Object message) throws Exception {
+    ActorRef parent = getContext().parent();
+    if(message instanceof Lookup) {
+      Lookup lookup = (Lookup)message;
+      Arrays.asList(this.cReader, this.bReader, this.aReader).stream().forEach(reader -> reader.);
+      if(lookup.hasCallback()) {
+        
+      }
+    }
     
   }
 }

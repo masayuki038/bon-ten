@@ -36,11 +36,11 @@ public class Reader {
     switch(read) {
     case SEQUENTIAL:
       int bufferSize = config.getInt("read_biffer_size", 512 * 1024);
-      fileReader = new DataInputStream(new BufferedInputStream(new FileInputStream(this.dataFilePath), bufferSize));
+      this.fileReader = new DataInputStream(new BufferedInputStream(new FileInputStream(this.dataFilePath), bufferSize));
       return;
     case RANDOM:
       this.randomReader = new RandomAccessFile(this.dataFilePath, "r");
-      prepare();
+      prepareForRandom();
       break;
     default:
       throw new IllegalArgumentException("Invalid Read: " + read);
@@ -55,7 +55,7 @@ public class Reader {
     return node.getEntryList();
   }
 
-  protected void prepare() throws FileNotFoundException, IOException {
+  protected void prepareForRandom() throws FileNotFoundException, IOException {
     try {
       int length = Utils.toBytes(Bonten.FILE_FORMAT).length;
       byte[] formatBuf = new byte[length];
