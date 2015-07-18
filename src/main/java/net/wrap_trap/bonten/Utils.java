@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
@@ -93,7 +94,6 @@ public class Utils {
       return unpacker.read(listTmpl);
     }
   }
-  
 
   private static byte[] serializeEncodedEntryList(List<byte[]> encoded) throws IOException {
     try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

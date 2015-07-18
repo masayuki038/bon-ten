@@ -17,7 +17,7 @@ public class ReaderTest {
   @Test
   public void testSerializeBloom() throws IOException, ClassNotFoundException {
     final Bloom bloom = new Bloom(2000);
-    Reader reader = new Reader("dummy");
+    LevelReader reader = new LevelReader("dummy");
     
     Bloom bloom2 = reader.deserializeBloom(Writer.serializeBloom(bloom));
     assertThat(bloom2.n, is(bloom.n));
@@ -28,8 +28,7 @@ public class ReaderTest {
   @Test
   public void testSerializeBloomWithState() throws ClassNotFoundException, IOException {
     final Bloom bloom = new Bloom(2000);
-    Reader reader = new Reader("dummy");
-    Writer writer = new Writer("dummy");
+    LevelReader reader = new LevelReader("dummy");
 
     bloom.add("test".getBytes());
     assertThat(bloom.member("test".getBytes()), is(true));
@@ -49,14 +48,14 @@ public class ReaderTest {
     Bonten.init();
     
     int level = 0;
-    Reader reader = new Reader("dummy");
+    MergeReader reader = new MergeReader("dummy");
     Writer writer = new Writer("dummy");
     writer.open(new HashMap<>());
     KeyValueEntry newEntry = new KeyValueEntry(Utils.toBytes("foo"), Utils.toBytes("bar"));
     writer.appendNode(level, newEntry);
     writer.close();
     
-    reader.open(Read.RANDOM);
+    reader.open();
     List<Entry> entryList = reader.getFirstNode();
     assertThat(entryList.size(), is(1));
     Entry readEntry = entryList.get(0);
@@ -70,7 +69,7 @@ public class ReaderTest {
     Bonten.init();
     
     int level = 0;
-    Reader reader = new Reader("dummy");
+    MergeReader reader = new MergeReader("dummy");
     Writer writer = new Writer("dummy");
     writer.open(new HashMap<>());
     KeyValueEntry newEntry1 = new KeyValueEntry(Utils.toBytes("foo"), Utils.toBytes("bar"));
@@ -79,7 +78,7 @@ public class ReaderTest {
     writer.appendNode(level, newEntry2);    
     writer.close();
     
-    reader.open(Read.RANDOM);
+    reader.open();
     List<Entry> entryList = reader.getFirstNode();
     assertThat(entryList.size(), is(2));
     Entry readEntry1 = entryList.get(0);

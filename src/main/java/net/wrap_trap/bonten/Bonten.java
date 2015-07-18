@@ -16,6 +16,7 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.pattern.Patterns;
+import akka.util.Timeout;
 import net.wrap_trap.bonten.level.Level;
 
 public class Bonten extends UntypedActor {
@@ -37,7 +38,11 @@ public class Bonten extends UntypedActor {
   
   public static final String FILE_FORMAT = "HAN2";
   public static final long FIRST_BLOCK_POS = Utils.toBytes(FILE_FORMAT).length;
-
+  public static final byte[] dummyKey = new byte[]{};
+  
+  public static final Timeout ASK_TIMEOUT = new Timeout(Duration.create(5, "seconds"));;
+  public static final int FOLD_CHUNK_SIZE = 100;
+  
   private static final Pattern dataFilePattern = Pattern.compile("^[^\\d]+-(\\d+).data$");
 
   private static BontenConfig bontenConfig;
@@ -90,13 +95,12 @@ public class Bonten extends UntypedActor {
   }
   
   protected ActorRef createLevel(String dirPath, int level, ActorRef next) {
-    return getContext().actorOf(Props.create(Level.class, dirPath, level, next));
+    return getContext().actorOf(Props.create(Level.class, dirPath, level, next, getSelf()));
   }
   
   private Tuple<ActorRef, Integer> openLevel(String dirPath, Integer v, Tuple<ActorRef, Integer> t) {
     try {
       ActorRef level = createLevel(dirPath, v, t.e1);
-      level.tell("open", this.getSelf());
       Future<Object> future = Patterns.ask(level, "unmergedCount", -1L);
       Integer unmergedCount = (Integer)Await.result(future, Duration.create(5000, TimeUnit.MILLISECONDS));
       return new Tuple<>(level, t.e2 + unmergedCount);

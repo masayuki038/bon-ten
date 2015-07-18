@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.wrap_trap.bonten.MergeReader;
 import net.wrap_trap.bonten.Read;
 import net.wrap_trap.bonten.Reader;
 import net.wrap_trap.bonten.Writer;
@@ -36,11 +37,11 @@ public class Merger extends UntypedActor {
   }
 
   protected void merge() throws IOException {
-    Reader aReader = new Reader(this.aFile.getAbsolutePath());
-    aReader.open(Read.SEQUENTIAL);
+    MergeReader aReader = new MergeReader(this.aFile.getAbsolutePath());
+    aReader.open();
 
-    Reader bReader = new Reader(this.bFile.getAbsolutePath());
-    bReader.open(Read.SEQUENTIAL);
+    MergeReader bReader = new MergeReader(this.bFile.getAbsolutePath());
+    bReader.open();
     
     Map<String, Object> options = new HashMap<>();
     options.put("size", this.bTreeSize);

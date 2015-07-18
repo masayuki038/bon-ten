@@ -13,7 +13,7 @@ import java.util.List;
 
 import net.wrap_trap.bonten.entry.Entry;
 
-public class Reader {
+public abstract class Reader {
 
   private String dataFilePath;
   private File dataFile;
@@ -99,17 +99,5 @@ public class Reader {
     List<Entry> entryList = Utils.decodeIndexNodes(buf);
     return new Node(level, entryList);
   }
-  
-  protected Node readNodeBySequential(long pos) throws IOException {
-    this.fileReader.skip(pos);
-    int len = this.fileReader.readInt();
-    int level = this.fileReader.readShort();
-    if(len == 0) {
-      return null;
-    }
-    byte[] buf = new byte[len - 2];
-    this.fileReader.read(buf);
-    List<Entry> entryList = Utils.decodeIndexNodes(buf);
-    return new Node(level, entryList);
-  }
+ 
 }

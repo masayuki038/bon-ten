@@ -38,4 +38,8 @@ abstract public class Entry {
   public boolean isTombstone() {
     return getValue() == TOMBSTONE;
   }
+
+  public boolean hasExpired() {
+    return getTimestamp().getTime() < System.currentTimeMillis();
+  }
 }
