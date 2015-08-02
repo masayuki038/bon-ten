@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 
 import scala.concurrent.Await;
 import net.wrap_trap.bonten.Bonten;
+import net.wrap_trap.bonten.BontenActor;
 import net.wrap_trap.bonten.BontenException;
 import net.wrap_trap.bonten.KeyRange;
 import net.wrap_trap.bonten.LevelReader;
@@ -24,7 +25,7 @@ import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.pattern.Patterns;
 
-public class RangeFolder extends UntypedActor {
+public class RangeFolder extends BontenActor {
 
   public void run(File file, ActorRef workerPid, KeyRange keyRange) throws IOException {
     getContext().watch(workerPid);
@@ -61,24 +62,13 @@ public class RangeFolder extends UntypedActor {
   }
 
   private void send(ActorRef workerPid, ActorRef selfOrRef, List<Entry> entries) {
-    try{
-      Await.result(
-        Patterns.ask(
-          workerPid, 
-          new LevelResult(selfOrRef, entries),
-          Bonten.ASK_TIMEOUT
-        ), 
-        Bonten.ASK_TIMEOUT.duration()
-      );
-    } catch (Exception e) {
-      throw new BontenException(e);
-    }
+    call(workerPid, new LevelResult(selfOrRef, entries));
   }
   
   @Override
   public void onReceive(Object message) throws Exception {
     if(message instanceof Terminated) {
-      getContext().stop(getSelf());
+     throw new BontenException("worker is down");
     }
     if(message instanceof RangeFoldStart) {
       RangeFoldStart rangeFoldStart = (RangeFoldStart)message;

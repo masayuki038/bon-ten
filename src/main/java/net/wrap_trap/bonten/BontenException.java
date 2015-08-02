@@ -8,6 +8,10 @@ public class BontenException extends RuntimeException {
     super(cause);
   }
 
+  public BontenException(String cause) {
+    super(cause);
+  }
+  
   public BontenException(String message, Throwable cause) {
     super(message, cause);
   }
@@ -15,4 +19,5 @@ public class BontenException extends RuntimeException {
   public BontenException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
   }
+
 }

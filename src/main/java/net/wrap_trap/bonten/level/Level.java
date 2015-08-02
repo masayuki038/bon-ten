@@ -45,6 +45,7 @@ import net.wrap_trap.bonten.message.StepLevel;
 import net.wrap_trap.bonten.message.StepOk;
 import net.wrap_trap.bonten.message.UnmergedCount;
 import net.wrap_trap.bonten.range.RangeFolder;
+import net.wrap_trap.bonten.rpc.SyncRequest;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.Terminated;
@@ -177,27 +178,28 @@ public class Level extends BontenActor {
 
   @Override
   public void onReceive(Object message) throws Exception {
-    if(message instanceof Lookup) {
+    if(matchCall(message, Lookup.class)) {
       Entry entry = doLookup((Lookup)message);
       getContext().sender().tell(entry, getSelf());
       return;
     }
-    if(message instanceof Inject) {
+    if(matchCall(message, Inject.class)) {
       if(cReader == null) {  
         doInject((Inject)message);
-        getContext().sender().tell(true, getSelf());
+        sendReply(getContext().sender(), true);
+        
         return;
       }
     }
-    if(message instanceof UnmergedCount) {
-      getContext().sender().tell(totalUnmerged(), getSelf());
+    if(matchCall(message, UnmergedCount.class)) {
+      sendReply(getContext().sender(), totalUnmerged());
       return;
     }
-    if(message instanceof SetMaxLevel) {
+    if(matchCast(message, SetMaxLevel.class)) {
       setMaxLevel((SetMaxLevel)message);
       return;
     }
-    if(message instanceof BeginIncrementalMerge) {
+    if(matchCall(message, BeginIncrementalMerge.class)) {
       BeginIncrementalMerge biMerge = (BeginIncrementalMerge)message;
       if((this.stepMergeRef == null) && (this.stepNextRef == null)) {
         getContext().sender().tell(true, getSelf());
@@ -205,14 +207,15 @@ public class Level extends BontenActor {
         return;
       }
     }
-    if(message instanceof AwaitIncrementalMerge) {
+    if(matchCall(message, AwaitIncrementalMerge.class)) {
       if(stepMergeRef == null && stepNextRef == null) {
         getContext().sender().tell(true, getSelf());
         return;
       }
     }
-    if(message instanceof LevelQuery) {
-      getContext().sender().tell(this.level, getSelf());
+    // TODO step_level
+    if(matchCall(message, LevelQuery.class)) {
+      sendReply(getContext().sender(), this.level);
       return;
     }
     if(message instanceof StepDone) {
@@ -240,14 +243,14 @@ public class Level extends BontenActor {
         this.workInProgress = 0;
       }
     }
-    if(message instanceof StepOk) {
+    if(matchReply(message, StepOk.class)) {
       if(getContext().sender().equals(this.stepNextRef) && (this.stepMergeRef == null)) {
         replyStepOk();
         getContext().unwatch(this.stepNextRef);
         this.stepNextRef = null;
       }
     }
-    if(message instanceof Close) {
+    if(matchCall(message, Close.class)) {
       closeIfDefined(this.aReader);
       closeIfDefined(this.bReader);
       closeIfDefined(this.cReader);
@@ -261,7 +264,7 @@ public class Level extends BontenActor {
       }
       getContext().sender().tell(true, getSelf());
     }
-    if(message instanceof Destroy) {
+    if(matchCall(message, Destroy.class)) {
       destroyIfDefined(this.aReader);
       destroyIfDefined(this.bReader);
       destroyIfDefined(this.cReader);
@@ -276,7 +279,7 @@ public class Level extends BontenActor {
       }
       getContext().sender().tell(true, getSelf());
     }
-    if(message instanceof InitSnapshotRangeFold) {
+    if(matchCall(message, InitSnapshotRangeFold.class)) {
       if((this.folding == null) || (folding.size() == 0)) {
         InitSnapshotRangeFold isRangeFold = (InitSnapshotRangeFold)message;
         List<ActorRef> nextList = isRangeFold.getList();
@@ -313,7 +316,7 @@ public class Level extends BontenActor {
       deleteFile(rangeFoldDone.getFile());
       this.folding.remove(rangeFoldDone.getPid());
     }
-    if(message instanceof InitBlockingRangeFold) {
+    if(matchCall(message, InitBlockingRangeFold.class)) {
       InitBlockingRangeFold ibRangeFold = (InitBlockingRangeFold)message;
       if(this.aReader != null) {
         startRangeFold2(this.aReader, ibRangeFold);
@@ -330,7 +333,7 @@ public class Level extends BontenActor {
         next.tell(ibRangeFold, getSelf());
       }
     }
-    if(message instanceof MergeDone) {
+    if(matchCast(message, MergeDone.class)) {
       MergeDone mergeDone = (MergeDone)message;
       if(mergeDone.getCount() == 0) {
         deleteFile(mergeDone.getOutFileName());
@@ -392,7 +395,7 @@ public class Level extends BontenActor {
     // ここから再開
     // REPLY?(MRef, ok) when...when
   }
-
+  
   protected void closeAndDeleteAandB() throws IOException {
     this.aReader.close();
     this.bReader.close();
@@ -500,7 +503,7 @@ public class Level extends BontenActor {
   
   protected void replyStepOk() {
     if(this.stepCaller != null) {
-      this.stepCaller.tell(new StepOk(), getSender());
+      sendReply(this.stepCaller, new StepOk());
     }
     this.stepCaller = null;
   }

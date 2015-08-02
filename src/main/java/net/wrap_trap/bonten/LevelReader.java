@@ -252,6 +252,7 @@ public class LevelReader {
     if(!(entry instanceof PosLenEntry)) {
       throw new IllegalStateException("Unexpected Entry Type: " + entry.getClass().getSimpleName());
     }
+    // TODO readNode should be call from the other actor
     Node node = readNode((PosLenEntry)entry);
     return lookupInNode2(node, key);
   }
