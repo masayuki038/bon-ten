@@ -3,6 +3,9 @@ package net.wrap_trap.bonten;
 import net.wrap_trap.bonten.message.Message;
 import net.wrap_trap.bonten.rpc.AsyncRequest;
 import net.wrap_trap.bonten.rpc.Reply;
+import net.wrap_trap.bonten.rpc.ReplyMatchedThen;
+import net.wrap_trap.bonten.rpc.CallMatchedThen;
+import net.wrap_trap.bonten.rpc.CastMatchedThen;
 import net.wrap_trap.bonten.rpc.SyncRequest;
 import scala.concurrent.Await;
 import akka.actor.ActorRef;
@@ -14,7 +17,7 @@ public abstract class BontenActor extends UntypedActor implements PlainRpc {
   @Override
   public ActorRef sendCall(ActorRef actorRef, Message message) {
     ActorRef mref = getContext().watch(actorRef);
-    actorRef.tell(new SyncRequest(message), getSender());
+    actorRef.tell(new SyncRequest(message, mref), getSender());
     return mref;
   }
   
@@ -25,7 +28,7 @@ public abstract class BontenActor extends UntypedActor implements PlainRpc {
       Await.result(
   		  Patterns.ask(
   			  actorRef, 
-  			  new SyncRequest(message),
+  			  new SyncRequest(message, mref),
   			  Bonten.ASK_TIMEOUT
   			), 
   		  Bonten.ASK_TIMEOUT.duration()
@@ -40,28 +43,49 @@ public abstract class BontenActor extends UntypedActor implements PlainRpc {
   }
 
   @Override
-  public void sendReply(ActorRef actorRef, Object message) {
-    actorRef.tell(new Reply(message), getSender());
+  public void sendReply(ActorRef actorRef, Message message, ActorRef mref) {
+    actorRef.tell(new Reply(message, mref), getSender());
+  }
+
+  protected void matchCall(Object request, Class<?> t, CallMatchedThen f) throws Exception {
+    if(!(request instanceof SyncRequest)) {
+      return;
+    }
+    
+    SyncRequest syncRequest = (SyncRequest)request;
+    Message message = syncRequest.getMessage();
+    if(message.getClass() != t) {
+      return;
+    }
+    
+    f.apply(message, syncRequest.getMref());
   }
   
-  protected boolean matchCall(Object message, Class<?> t) {
-    if(!(message instanceof SyncRequest)) {
-      return false;
+  protected void matchCast(Object object, Class<?> t, CastMatchedThen f) throws Exception {
+    if(!(object instanceof AsyncRequest)) {
+      return;
     }
-    return (message.getClass() == t);
+    
+    AsyncRequest asyncRequest = (AsyncRequest)object;
+    Message message = asyncRequest.getMessage();
+    if(message.getClass() != t) {
+      return;
+    }
+    
+    f.apply(message);
   }
   
-  protected boolean matchCast(Object message, Class<?> t) {
-    if(!(message instanceof AsyncRequest)) {
-      return false;
+  protected void matchReply(Object object, Class<?> t, ReplyMatchedThen f) throws Exception {
+    if(!(object instanceof Reply)) {
+      return;
     }
-    return (message.getClass() == t);
-  }
-  
-  protected boolean matchReply(Object message, Class<?> t) {
-    if(!(message instanceof Reply)) {
-      return false;
+    
+    Reply reply = (Reply)object;
+    Message message = reply.getMessage();
+    if(message.getClass() != t) {
+      return;
     }
-    return (message.getClass() == t);
+    
+    f.apply(message, reply.getMref());
   }
 }

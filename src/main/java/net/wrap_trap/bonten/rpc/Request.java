@@ -11,7 +11,7 @@ abstract public class Request {
 		this.messsage = messsage;
 	}
 
-	public Message getMesssage() {
+	public Message getMessage() {
 		return messsage;
 	}
 }

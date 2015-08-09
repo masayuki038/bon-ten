@@ -6,5 +6,5 @@ import akka.actor.ActorRef;
 public interface PlainRpc {
   ActorRef sendCall(ActorRef actorRef, Message message);
   void call(ActorRef actorRef, Message message);
-  void sendReply(ActorRef actorRef, Object message);
+  void sendReply(ActorRef actorRef, Message message, ActorRef mref);
 }

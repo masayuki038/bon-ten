@@ -34,8 +34,10 @@ import net.wrap_trap.bonten.message.InitSnapshotRangeFold;
 import net.wrap_trap.bonten.message.InitBlockingRangeFold;
 import net.wrap_trap.bonten.message.Inject;
 import net.wrap_trap.bonten.message.LevelQuery;
+import net.wrap_trap.bonten.message.LevelReply;
 import net.wrap_trap.bonten.message.Lookup;
 import net.wrap_trap.bonten.message.MergeDone;
+import net.wrap_trap.bonten.message.Ok;
 import net.wrap_trap.bonten.message.RangeFoldDone;
 import net.wrap_trap.bonten.message.SetMaxLevel;
 import net.wrap_trap.bonten.message.RangeFoldStart;
@@ -43,6 +45,7 @@ import net.wrap_trap.bonten.message.Step;
 import net.wrap_trap.bonten.message.StepDone;
 import net.wrap_trap.bonten.message.StepLevel;
 import net.wrap_trap.bonten.message.StepOk;
+import net.wrap_trap.bonten.message.TotalUnmerged;
 import net.wrap_trap.bonten.message.UnmergedCount;
 import net.wrap_trap.bonten.range.RangeFolder;
 import net.wrap_trap.bonten.rpc.SyncRequest;
@@ -69,6 +72,7 @@ public class Level extends BontenActor {
   private ActorRef stepMergeRef;
   private ActorRef stepNextRef;
   private ActorRef stepCaller;
+  private ActorRef stepCallerMref;
   
   private int workDone;
   private int workInProgress;
@@ -177,49 +181,48 @@ public class Level extends BontenActor {
   }
 
   @Override
-  public void onReceive(Object message) throws Exception {
-    if(matchCall(message, Lookup.class)) {
+  public void onReceive(Object object) throws Exception {
+    matchCall(object, Lookup.class, (message, mref) -> {
       Entry entry = doLookup((Lookup)message);
       getContext().sender().tell(entry, getSelf());
       return;
-    }
-    if(matchCall(message, Inject.class)) {
+    });
+    matchCall(object, Inject.class, (message, mref) -> {
       if(cReader == null) {  
         doInject((Inject)message);
-        sendReply(getContext().sender(), true);
-        
+        sendReply(getContext().sender(), new Ok(), mref);
         return;
       }
-    }
-    if(matchCall(message, UnmergedCount.class)) {
-      sendReply(getContext().sender(), totalUnmerged());
+    });
+    matchCall(object, UnmergedCount.class, (message, mref) -> {
+      sendReply(getContext().sender(), new TotalUnmerged(totalUnmerged()), mref);
       return;
-    }
-    if(matchCast(message, SetMaxLevel.class)) {
+    });
+    matchCast(object, SetMaxLevel.class, (message) -> {
       setMaxLevel((SetMaxLevel)message);
       return;
-    }
-    if(matchCall(message, BeginIncrementalMerge.class)) {
+    });
+    matchCall(object, BeginIncrementalMerge.class, (message, mref) -> {
       BeginIncrementalMerge biMerge = (BeginIncrementalMerge)message;
       if((this.stepMergeRef == null) && (this.stepNextRef == null)) {
         getContext().sender().tell(true, getSelf());
-        doStep(null, 0, biMerge.getStepSize());
+        doStep(null, mref, 0, biMerge.getStepSize());
         return;
       }
-    }
-    if(matchCall(message, AwaitIncrementalMerge.class)) {
+    });
+    matchCall(object, AwaitIncrementalMerge.class, (message, mref) -> {
       if(stepMergeRef == null && stepNextRef == null) {
         getContext().sender().tell(true, getSelf());
         return;
       }
-    }
+    });
     // TODO step_level
-    if(matchCall(message, LevelQuery.class)) {
-      sendReply(getContext().sender(), this.level);
+    matchCall(object, LevelQuery.class, (message, mref) -> {
+      sendReply(getContext().sender(), new LevelReply(this.level), mref);
       return;
-    }
-    if(message instanceof StepDone) {
-      ActorRef mRef = ((StepDone)message).getMRef();
+    });
+    if(object instanceof StepDone) {
+      ActorRef mRef = ((StepDone)object).getMRef();
       if(mRef.equals(this.stepMergeRef)) {        
         getContext().unwatch(mRef);
         this.workDone = this.workDone + this.workInProgress;
@@ -233,8 +236,8 @@ public class Level extends BontenActor {
         throw new IllegalStateException("Unexpected step_done");
       }
     }
-    if(message instanceof Terminated) {
-      Terminated terminated = (Terminated)message;
+    if(object instanceof Terminated) {
+      Terminated terminated = (Terminated)object;
       if(terminated.getActor().equals(this.stepMergeRef)) {
         if(this.stepNextRef == null) {
           replyStepOk();
@@ -243,14 +246,14 @@ public class Level extends BontenActor {
         this.workInProgress = 0;
       }
     }
-    if(matchReply(message, StepOk.class)) {
+    matchReply(object, StepOk.class, (message, mref) -> {
       if(getContext().sender().equals(this.stepNextRef) && (this.stepMergeRef == null)) {
         replyStepOk();
         getContext().unwatch(this.stepNextRef);
         this.stepNextRef = null;
       }
-    }
-    if(matchCall(message, Close.class)) {
+    });
+    matchCall(object, Close.class, (message, mref) -> {
       closeIfDefined(this.aReader);
       closeIfDefined(this.bReader);
       closeIfDefined(this.cReader);
@@ -263,8 +266,8 @@ public class Level extends BontenActor {
         close(next);
       }
       getContext().sender().tell(true, getSelf());
-    }
-    if(matchCall(message, Destroy.class)) {
+    });
+    matchCall(object, Destroy.class, (message, mref) -> {
       destroyIfDefined(this.aReader);
       destroyIfDefined(this.bReader);
       destroyIfDefined(this.cReader);
@@ -278,8 +281,8 @@ public class Level extends BontenActor {
         destroy(next);
       }
       getContext().sender().tell(true, getSelf());
-    }
-    if(matchCall(message, InitSnapshotRangeFold.class)) {
+    });
+    matchCall(object, InitSnapshotRangeFold.class, (message, mref) -> {
       if((this.folding == null) || (folding.size() == 0)) {
         InitSnapshotRangeFold isRangeFold = (InitSnapshotRangeFold)message;
         List<ActorRef> nextList = isRangeFold.getList();
@@ -310,13 +313,13 @@ public class Level extends BontenActor {
         }
         this.folding = foldingsPids;
       }     
-    }
-    if(message instanceof RangeFoldDone) {
-      RangeFoldDone rangeFoldDone = (RangeFoldDone)message;
+    });
+    if(object instanceof RangeFoldDone) {
+      RangeFoldDone rangeFoldDone = (RangeFoldDone)object;
       deleteFile(rangeFoldDone.getFile());
       this.folding.remove(rangeFoldDone.getPid());
     }
-    if(matchCall(message, InitBlockingRangeFold.class)) {
+    matchCall(object, InitBlockingRangeFold.class, (message, mref) -> {
       InitBlockingRangeFold ibRangeFold = (InitBlockingRangeFold)message;
       if(this.aReader != null) {
         startRangeFold2(this.aReader, ibRangeFold);
@@ -332,8 +335,8 @@ public class Level extends BontenActor {
       } else {
         next.tell(ibRangeFold, getSelf());
       }
-    }
-    if(matchCast(message, MergeDone.class)) {
+    });
+    matchCast(object, MergeDone.class, (message) -> {
       MergeDone mergeDone = (MergeDone)message;
       if(mergeDone.getCount() == 0) {
         deleteFile(mergeDone.getOutFileName());
@@ -391,9 +394,13 @@ public class Level extends BontenActor {
         this.injectDoneRef = sendCall(this.next, new Inject(mergeDone.getOutFileName()));
         this.mergePid = null;
       }
-    }
-    // ここから再開
-    // REPLY?(MRef, ok) when...when
+    });
+    matchReply(object, Ok.class, (message, mref) -> {
+      if(mref == this.injectDoneRef) {
+        
+      }
+      
+    });
   }
   
   protected void closeAndDeleteAandB() throws IOException {
@@ -451,7 +458,7 @@ public class Level extends BontenActor {
     levelReader.close();
   }
   
-  protected void doStep(ActorRef stepFrom, int prevWork, int stepSize) throws Exception {
+  protected void doStep(ActorRef stepFrom, ActorRef mref, int prevWork, int stepSize) throws Exception {
     int workLeftHere = 0;
     if(this.bReader != null && this.mergePid != null) {
       workLeftHere = Math.max(0, (2 * Utils.getBtreeSize(this.level)) - this.workDone);
@@ -496,6 +503,7 @@ public class Level extends BontenActor {
     } else {
       this.stepNextRef = newDelegateRef;
       this.stepCaller = stepFrom;
+      this.stepCallerMref = mref;
       this.stepMergeRef = newMergeRef;
       this.workInProgress = workToDoHere;
     }
@@ -503,9 +511,10 @@ public class Level extends BontenActor {
   
   protected void replyStepOk() {
     if(this.stepCaller != null) {
-      sendReply(this.stepCaller, new StepOk());
+      sendReply(this.stepCaller, new StepOk(), this.stepCallerMref);
     }
     this.stepCaller = null;
+    this.stepCallerMref = null;
   }
   
   protected void setMaxLevel(SetMaxLevel setMaxLevel) {
